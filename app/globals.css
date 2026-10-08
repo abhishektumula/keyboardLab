@@ -1,0 +1,433 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ---- Settings are data attributes on <html>; see lib/settings.ts ---- */
+
+html {
+  --accent: #0a84ff;
+}
+
+/* Page theme */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --page-a: #1a1a20;
+  --page-b: #050506;
+  --fg: #f2f2f5;
+  --muted: #8d8d96;
+  --tool-bg: rgba(255, 255, 255, 0.06);
+  --tool-border: rgba(255, 255, 255, 0.14);
+  --tool-hover: rgba(255, 255, 255, 0.14);
+  --deck-shadow: 0 50px 90px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --page-a: #f7f7fa;
+  --page-b: #d8d9df;
+  --fg: #1d1d1f;
+  --muted: #6e6e73;
+  --tool-bg: rgba(0, 0, 0, 0.05);
+  --tool-border: rgba(0, 0, 0, 0.14);
+  --tool-hover: rgba(0, 0, 0, 0.1);
+  --deck-shadow: 0 40px 70px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* Keyboard colour */
+html[data-kb="white"] {
+  --deck: #d6d7dc;
+  --cap-hi: #ffffff;
+  --cap: #f0f0f3;
+  --cap-edge: #b4b5bb;
+  --cap-shine: rgba(255, 255, 255, 0.95);
+  --legend: #3a3a3f;
+}
+
+html[data-kb="black"] {
+  --deck: #131315;
+  --cap-hi: #2b2b2f;
+  --cap: #1b1b1e;
+  --cap-edge: #050506;
+  --cap-shine: rgba(255, 255, 255, 0.1);
+  --legend: #9a9aa3;
+}
+
+/* Backlight: light leaking round each key, and glowing legends on dark keys */
+html[data-backlight="off"] {
+  --leak: transparent;
+  --leak-glow: transparent;
+  --legend-glow: transparent;
+}
+
+/* --bl is the brightness slider, 0 to 1. */
+html[data-backlight="on"][data-kb="black"] {
+  --legend: color-mix(in srgb, #ffffff calc(var(--bl) * 100%), #7c7c85);
+  --legend-glow: rgba(255, 255, 255, calc(var(--bl) * 0.95));
+  --leak: rgba(255, 246, 228, calc(var(--bl) * 0.75));
+  --leak-glow: rgba(255, 246, 228, calc(var(--bl) * 0.34));
+}
+
+html[data-backlight="on"][data-kb="white"] {
+  --legend: #2a2a2f;
+  --legend-glow: transparent;
+  --leak: rgba(255, 255, 255, calc(var(--bl) * 0.9));
+  --leak-glow: rgba(255, 255, 255, calc(var(--bl) * 0.36));
+}
+
+body {
+  height: 100dvh;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 35%, var(--page-a), var(--page-b));
+  color: var(--fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  transition: color 0.3s;
+}
+
+/* ---- Toolbar ---- */
+
+.tool {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--tool-border);
+  background: var(--tool-bg);
+  color: var(--fg);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    transform 0.08s;
+}
+
+.tool:hover {
+  background: var(--tool-hover);
+}
+
+.tool:active {
+  transform: scale(0.93);
+}
+
+.tool > svg,
+.tool > .swatch {
+  grid-area: 1 / 1;
+}
+
+.backlight-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-right: 0.8rem;
+  border-radius: 9999px;
+  border: 1px solid var(--tool-border);
+  background: var(--tool-bg);
+}
+
+.backlight-group .tool {
+  border: 0;
+  background: transparent;
+}
+
+.slider {
+  width: 6.5rem;
+  height: 1.4rem;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+html[data-backlight="off"] .slider {
+  opacity: 0.45;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    var(--fg) calc((var(--bl) - 0.1) / 0.9 * 100%),
+    var(--tool-border) 0
+  );
+}
+
+.slider::-moz-range-track {
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: var(--tool-border);
+}
+
+.slider::-moz-range-progress {
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: var(--fg);
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-top: -0.325rem;
+  border-radius: 9999px;
+  border: 0;
+  background: var(--fg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.slider::-moz-range-thumb {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 9999px;
+  border: 0;
+  background: var(--fg);
+}
+
+.swatch {
+  align-self: end;
+  justify-self: end;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin: 0 0.3rem 0.3rem 0;
+  border-radius: 9999px;
+  border: 1px solid var(--tool-border);
+}
+
+.k-white {
+  background: #fff;
+}
+
+.k-black {
+  background: #111;
+}
+
+/* Each toggle shows an icon for its current state: hide the other one. */
+html[data-theme="dark"] .t-light,
+html[data-theme="light"] .t-dark,
+html[data-kb="black"] .k-white,
+html[data-kb="white"] .k-black,
+html[data-backlight="on"] .b-off,
+html[data-backlight="off"] .b-on,
+html[data-sound="on"] .s-off,
+html[data-sound="off"] .s-on,
+html[data-mode="synth"] .m-click,
+html[data-mode="click"] .m-synth {
+  display: none;
+}
+
+/* ---- Readout ---- */
+
+.readout {
+  display: grid;
+  place-items: center;
+  height: 8rem;
+  text-align: center;
+}
+
+.readout-main {
+  font-size: clamp(2.5rem, 7vh, 4.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.readout-sub {
+  margin-top: 0.4rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.readout-idle {
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  animation: idle-pulse 2.4s ease-in-out infinite;
+}
+
+.readout-pop {
+  animation: readout-pop 0.18s ease-out both;
+}
+
+@keyframes readout-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes idle-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ---- Keyboard ---- */
+
+.kb {
+  container-type: inline-size;
+}
+
+/* U is one key unit. Everything inside is sized from it, so the board scales with its width. */
+.kb-deck {
+  --gap: 0.6cqw;
+  --u: calc((97.2cqw - 14 * var(--gap)) / 15);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding: 1.4cqw;
+  border-radius: 2.2cqw;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--deck) 90%, white), var(--deck));
+  box-shadow:
+    var(--deck-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: background 0.3s;
+}
+
+.kb-row {
+  display: flex;
+  gap: var(--gap);
+}
+
+.kb-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.key {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: calc(var(--u) * 0.09);
+  border-radius: calc(var(--u) * 0.11);
+  background: linear-gradient(180deg, var(--cap-hi), var(--cap));
+  color: var(--legend);
+  font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  box-shadow:
+    0 calc(var(--u) * 0.035) 0 var(--cap-edge),
+    0 calc(var(--u) * 0.07) calc(var(--u) * 0.08) rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 var(--cap-shine),
+    0 0 0 calc(var(--u) * 0.012) var(--leak),
+    0 0 calc(var(--u) * 0.18) var(--leak-glow);
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  transition:
+    transform 0.05s ease-out,
+    box-shadow 0.08s,
+    background-color 0.08s,
+    color 0.2s;
+}
+
+.key[data-align="left"] {
+  align-items: flex-start;
+}
+
+.key[data-align="right"] {
+  align-items: flex-end;
+}
+
+.key[data-kind="letter"],
+.key[data-kind="pair"],
+.key[data-kind="icon"] {
+  justify-content: center;
+}
+
+.key[data-kind="fn"] {
+  justify-content: space-between;
+  padding-top: calc(var(--u) * 0.06);
+  padding-bottom: calc(var(--u) * 0.05);
+}
+
+.legend {
+  font-size: calc(var(--u) * 0.2);
+  font-weight: 500;
+  line-height: 1.15;
+  text-shadow: 0 0 0.7em var(--legend-glow);
+}
+
+.key[data-kind="letter"] .legend {
+  font-size: calc(var(--u) * 0.3);
+  text-transform: uppercase;
+}
+
+.legend.small {
+  font-size: calc(var(--u) * 0.135);
+  letter-spacing: 0.01em;
+}
+
+.key[data-kind="fn"] .legend.small {
+  font-size: calc(var(--u) * 0.11);
+  opacity: 0.75;
+}
+
+.key[data-modifier][data-align="left"] .legend-top {
+  align-self: flex-end;
+}
+
+.legend-icon {
+  width: calc(var(--u) * 0.26);
+  height: calc(var(--u) * 0.26);
+  filter: drop-shadow(0 0 0.3em var(--legend-glow));
+}
+
+.key[data-kind="icon"] .legend-icon {
+  width: calc(var(--u) * 0.2);
+  height: calc(var(--u) * 0.2);
+}
+
+.legend-corner {
+  position: absolute;
+  top: calc(var(--u) * 0.09);
+  right: calc(var(--u) * 0.09);
+  width: calc(var(--u) * 0.18);
+  height: calc(var(--u) * 0.18);
+}
+
+.led {
+  position: absolute;
+  top: calc(var(--u) * 0.1);
+  left: calc(var(--u) * 0.1);
+  width: calc(var(--u) * 0.07);
+  height: calc(var(--u) * 0.07);
+  border-radius: 9999px;
+  background: rgba(128, 128, 128, 0.35);
+}
+
+.led[data-on="true"] {
+  background: #7dff9b;
+  box-shadow: 0 0 calc(var(--u) * 0.12) #7dff9b;
+}
+
+/* The pressed key sinks and lights up. */
+.key[data-pressed="true"] {
+  transform: translateY(calc(var(--u) * 0.035)) scale(0.985);
+  background: color-mix(in srgb, var(--accent) 55%, var(--cap));
+  color: #fff;
+  box-shadow:
+    0 0 0 calc(var(--u) * 0.02) var(--accent),
+    0 0 calc(var(--u) * 0.35) color-mix(in srgb, var(--accent) 75%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.key[data-pressed="true"] .legend {
+  text-shadow: 0 0 0.6em rgba(255, 255, 255, 0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .readout-idle,
+  .readout-pop {
+    animation: none;
+  }
+}
